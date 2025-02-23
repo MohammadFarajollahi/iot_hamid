@@ -43,8 +43,8 @@ void ds18b20() {
     tft.setTextColor(TFT_BLUE, TFT_BLACK);
     //***HUSetting***
     LcdText = "<< " + String(HuSetting1, 1) + " >>";
-    tft.fillRoundRect(30, 200, 60, 20, 1, TFT_BLACK);
-    tft.setCursor(1, 200);
+    tft.fillRoundRect(30, 195, 60, 20, 1, TFT_BLACK);
+    tft.setCursor(1, 195);
     tft.print(LcdText);
     //***hu1***
     LcdText = "HU1:" + String(hu1, 1) + "%";

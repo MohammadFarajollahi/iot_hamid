@@ -32,10 +32,7 @@ void Sht20() {
     tft.setCursor(280, 30);
     tft.print(LcdText);
 
-    LcdText = "Save";
-    tft.setTextColor(TFT_RED, TFT_GREEN);
-    tft.setCursor(418, 15);
-    tft.print(LcdText);
+   
 
 
     // Serial.print("  🌡 دما: ");

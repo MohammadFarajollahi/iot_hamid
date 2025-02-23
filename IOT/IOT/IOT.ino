@@ -86,6 +86,8 @@ unsigned long total = 0;
 unsigned long tn = 0;
 String LcdText;
 //
+#include <ArduinoJson.h>
+JsonDocument doc;
 //*****تاچ****
 uint32_t count = ~0;
 //#include <XPT2046_Touchscreen.h>
@@ -128,6 +130,15 @@ public:
 };
 RTC_DS3231 rtc;
 int ClockTimer;
+bool trackingStarted = false;
+DateTime startDate;
+int daysPassed;
+
+//stm32_uart
+HardwareSerial stm32_serial(1);
+
+#include <esp_task_wdt.h>
+#define WDT_TIMEOUT 5  // زمان تایم‌اوت به ثانیه
 
 ///eeprom///
 #include <Preferences.h>
@@ -144,6 +155,7 @@ int shtTime = 5;
 float MainHumidity;
 float MainTemperature;
 
+
 //****ds18b20****
 float Temp1 = 25.5;
 float Temp2 = 23.5;
@@ -156,20 +168,55 @@ float hu3 = 63.5;
 float hu4 = 73.4;
 float HuSetting1 = 65.4;
 int khak_count = 5;
-//timer
+int megaChekCount;
+int megaCheckTimer = 60;
+int megaState;
+int mega_error;
+int megaResponse;
+int MegaresponseTimer;
+int MegaResponseCount;
+int responseError;
+String stm32_string;
+int megaStateCheck;
+int sdState;
+int sdTimer;
+int gpioTimer = 0;
+//*************************timer**********************
 hw_timer_t *timer = NULL;  // اشاره‌گر به تایمر
 void IRAM_ATTR onTimer() {
-
   ++ClockTimer;
   ++shtTime;
   ++khak_count;
+  if (megaState == 0) ++megaCheckTimer;
+  ++gpioTimer;
+  if (MegaResponseCount == 1) ++MegaresponseTimer;
+  esp_task_wdt_reset();  // ریست کردن تایمر واچ‌داگ
 }
+
+int element1;
+int element2;
+int tank1;
+int tank2;
+int tank3;
+int tank4;
+int tank5;
+int light1;
+int light2;
+int fan1;
+int fan2;
+
 
 
 int buzzer = 21;
+int megaReset = 46;
 
 void setup() {
+  // راه‌اندازی واچ‌داگ برای پردازش اصلی
+  esp_task_wdt_init(WDT_TIMEOUT, true);  // فعال‌سازی WDT
+  esp_task_wdt_add(NULL);                // اضافه کردن حلقه اصلی (loop) به WDT
+
   pinMode(buzzer, OUTPUT);
+  pinMode(megaReset, OUTPUT);
   digitalWrite(buzzer, HIGH);
   delay(100);
   digitalWrite(buzzer, LOW);
@@ -178,6 +225,7 @@ void setup() {
   delay(100);
   digitalWrite(buzzer, LOW);
   Serial.begin(115200);
+  stm32_serial.begin(115200, SERIAL_8N1, 42, 45);
   Serial.println("");
   Serial.println("");
   //TIMER
@@ -201,15 +249,30 @@ void setup() {
   ////sdcard////
   if (!SD.begin(CS_PIN)) {
     Serial.println("Failed to initialize SD card.");
-    return;
+    //return;
+    SD.end();
+    sdState = 0;
+  } else {
+    Serial.println("SD card initialized.");
+    sdState = 1;
+    sdTimer = 0;
   }
-  Serial.println("SD card initialized.");
+
   //////lcd//////
   Serial.println("Lovyan's LovyanGFX library Test!");
   tft.init();
   tft.setRotation(3);
   tft.startWrite();
   tft.fillScreen(TFT_BLACK);
+  if (sdState == 1) LcdText = "SD OK";
+  if (sdState == 0) LcdText = "SD ERROR";
+  tft.setTextFont(3);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+  tft.fillRoundRect(60, 310, 50, 20, 1, TFT_BLACK);
+  tft.setCursor(100, 310);
+  tft.print(LcdText);
+
   //tft.drawPngFile(SD, "/BACKGROUND.png", 0, 0);
   //sht20
   sht.begin();
@@ -233,15 +296,79 @@ void setup() {
     delay(20);
   }
   preferences.end();
-  ///////////////////////////////////////
 
+  ///days read///
+  preferences.begin("rtc_data", false);  // باز کردن فضای ذخیره‌سازی در حافظه EEPROM
+  // بررسی ذخیره بودن تاریخ شروع
+  uint32_t storedStart = preferences.getUInt("start_date", 0);
+  if (storedStart != 0) {
+    startDate = DateTime(storedStart);
+    trackingStarted = true;
+    Serial.println("✅ تاریخ شروع از EEPROM بازیابی شد!");
+  } else {
+    Serial.println("⚠️ هنوز تاریخ شروع تنظیم نشده است.");
+  }
+
+
+  if (!trackingStarted) {
+    Serial.println("⚠️ هنوز دستور 'START' داده نشده!");
+  } else {
+    DateTime now = rtc.now();
+    daysPassed = (now.unixtime() - startDate.unixtime()) / 86400;  // محاسبه روزهای سپری‌شده
+    Serial.printf("📅 %d روز از تاریخ شروع گذشته است.\n", daysPassed);
+  }
+  preferences.end();
+  ///////////////////////////////////////
+  ////save
+  tft.setTextFont(3);
+  tft.setTextSize(2);
+  LcdText = "Save";
+  tft.setTextColor(TFT_RED, TFT_WHITE);
+  tft.setCursor(418, 15);
+  tft.print(LcdText);
+  ///mainTep
   tft.drawLine(125, 55, 478, 55, TFT_WHITE);
   tft.drawLine(125, 0, 125, 55, TFT_WHITE);
   tft.drawLine(478, 0, 478, 55, TFT_WHITE);
-  ///
+  ///soil
   tft.drawLine(0, 185, 146, 185, TFT_WHITE);
   tft.drawLine(146, 55, 146, 305, TFT_WHITE);
   tft.drawLine(0, 305, 146, 305, TFT_WHITE);
+  ///start stop
+  tft.setTextFont(2);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_RED, TFT_WHITE);
+  LcdText = "START";
+  tft.setCursor(290, 105);
+  tft.print(LcdText);
+
+  tft.setTextFont(2);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_RED, TFT_WHITE);
+  LcdText = "STOP";
+  tft.setCursor(390, 105);
+  tft.print(LcdText);
+
+  tft.setTextFont(2);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  LcdText = "DAY";
+  tft.setCursor(290, 65);
+  tft.print(LcdText);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  LcdText = "<- " + String(daysPassed) + " ->";
+  tft.setCursor(350, 65);
+  tft.print(LcdText);
+
+  ////////////////////
+  tft.setTextFont(3);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+  LcdText = "***OUT***";
+  tft.setCursor(160, 60);
+  tft.print(LcdText);
+
+ 
 }
 
 
@@ -251,4 +378,7 @@ void loop(void) {
   Sht20();
   ds18b20();
   InputUart();
+  megaCheck();
+  dayProgram();
+  megaGpio();
 }
