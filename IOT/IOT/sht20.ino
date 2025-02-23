@@ -1,7 +1,7 @@
 
 
 void Sht20() {
-  if (shtTime >= 1) {
+  if (shtTime >= 10) {
     shtTime = 0;
     MainTemperature = sht.getTemperature();
     MainHumidity = sht.getHumidity();

@@ -1,3 +1,22 @@
+//wifi
+#include <WiFi.h>
+#include <WebServer.h>
+#include <HTTPClient.h>
+String id = "http://salirdev.ir/iot/api.php?id=C1002";
+int connect;
+int readDataCount;
+int wifiReset;
+int wifiReset_count;
+int CheckCount;
+int connectError;
+int reset_;
+int hang;
+int watchdog_timer;
+int ErrorReciveData;
+int errorrecive;
+// اطلاعات وای‌فای
+String ssid = "Nokia 8.1";
+String password = "rakhsh70";
 //*******sd_card********
 #include "Arduino.h"
 #include "SPI.h"
@@ -138,7 +157,7 @@ int daysPassed;
 HardwareSerial stm32_serial(1);
 
 #include <esp_task_wdt.h>
-#define WDT_TIMEOUT 5  // زمان تایم‌اوت به ثانیه
+#define WDT_TIMEOUT 6  // زمان تایم‌اوت به ثانیه
 
 ///eeprom///
 #include <Preferences.h>
@@ -151,10 +170,15 @@ SHT2x sht;
 float mainTempSettig;
 float mainHuSetting;
 
-int shtTime = 5;
+int shtTime = 10;
 float MainHumidity;
 float MainTemperature;
 
+int lock = 1;
+int lock_count;
+int lock_timer;
+
+int StartPrgram = 1;
 
 //****ds18b20****
 float Temp1 = 25.5;
@@ -167,7 +191,7 @@ float hu2 = 76.4;
 float hu3 = 63.5;
 float hu4 = 73.4;
 float HuSetting1 = 65.4;
-int khak_count = 5;
+int khak_count = 10;
 int megaChekCount;
 int megaCheckTimer = 60;
 int megaState;
@@ -190,6 +214,12 @@ void IRAM_ATTR onTimer() {
   if (megaState == 0) ++megaCheckTimer;
   ++gpioTimer;
   if (MegaResponseCount == 1) ++MegaresponseTimer;
+  if (lock_count >= 1) ++lock_timer;
+  if (lock_timer >= 5) {
+    lock_count = 0;
+    lock_timer = 0;
+  }
+  ++CheckCount;
   esp_task_wdt_reset();  // ریست کردن تایمر واچ‌داگ
 }
 
@@ -209,6 +239,8 @@ int fan2;
 
 int buzzer = 21;
 int megaReset = 46;
+
+int DayProg = 1;
 
 void setup() {
   // راه‌اندازی واچ‌داگ برای پردازش اصلی
@@ -258,6 +290,14 @@ void setup() {
     sdTimer = 0;
   }
 
+  //wifi
+  Serial.println("Connecting to saved WiFi...");
+  WiFi.begin(ssid.c_str(), password.c_str());
+  Serial.print("wifi:");
+  Serial.println(ssid);
+  Serial.print("pass:");
+  Serial.print(password);
+
   //////lcd//////
   Serial.println("Lovyan's LovyanGFX library Test!");
   tft.init();
@@ -269,8 +309,8 @@ void setup() {
   tft.setTextFont(3);
   tft.setTextSize(1);
   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-  tft.fillRoundRect(60, 310, 50, 20, 1, TFT_BLACK);
-  tft.setCursor(100, 310);
+  tft.fillRoundRect(70, 310, 60, 20, 1, TFT_BLACK);
+  tft.setCursor(70, 310);
   tft.print(LcdText);
 
   //tft.drawPngFile(SD, "/BACKGROUND.png", 0, 0);
@@ -368,7 +408,47 @@ void setup() {
   tft.setCursor(160, 60);
   tft.print(LcdText);
 
- 
+  tft.setTextFont(3);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_WHITE, TFT_RED);
+  LcdText = " LOCK ";
+  tft.setCursor(380, 300);
+  tft.print(LcdText);
+
+  //////////////////
+  if (StartPrgram == 1) LcdText = "Program Start";
+  if (StartPrgram == 0) LcdText = "Prgram Stop";
+  tft.setTextFont(3);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+  tft.fillRoundRect(150, 310, 70, 20, 1, TFT_BLACK);
+  tft.setCursor(150, 310);
+  tft.print(LcdText);
+
+  //dayprog
+  if (DayProg == 1) {
+    LcdText = "PROGRAM: LEVEL1";
+    tft.setTextFont(3);
+    tft.setTextSize(2);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.fillRoundRect(290, 170, 90, 20, 1, TFT_BLACK);
+    tft.setCursor(290, 170);
+    tft.print(LcdText);
+  }
+
+  //****wifi****
+  if (WiFi.status() == WL_CONNECTED) {
+    connect = 1;
+    connectError = 0;
+    Serial.println("Connected to WiFi");
+    LcdText = "WIFI Connect";
+    tft.setTextFont(3);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.fillRoundRect(250, 310, 120, 20, 1, TFT_BLACK);
+    tft.setCursor(250, 310);
+    tft.print(LcdText);
+  }
 }
 
 
@@ -379,6 +459,7 @@ void loop(void) {
   ds18b20();
   InputUart();
   megaCheck();
-  dayProgram();
+  if (StartPrgram == 1) dayProgram();
   megaGpio();
+  wifi();
 }

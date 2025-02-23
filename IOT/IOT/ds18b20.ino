@@ -1,7 +1,7 @@
 
 
 void ds18b20() {
-  if (khak_count >= 5) {
+  if (khak_count >= 10) {
     khak_count = 0;
     tft.setTextFont(3);
     tft.setTextSize(2);
