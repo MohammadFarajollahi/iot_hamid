@@ -9,7 +9,7 @@ void megaCheck() {
     }
 
     if (megaCheckTimer >= 2 && megaChekCount == 1) {
-      LcdText = "Mega Error";
+
       digitalWrite(buzzer, HIGH);
       delay(50);
       digitalWrite(buzzer, LOW);
@@ -27,13 +27,15 @@ void megaCheck() {
       tft.setTextColor(TFT_YELLOW, TFT_BLACK);
       tft.fillRoundRect(1, 310, 70, 20, 1, TFT_BLACK);
       tft.setCursor(1, 310);
+      LcdText = "Mega Error";
       tft.print(LcdText);
       ++mega_error;
+      megaCheckTimer = 25;
       megaCheckTimer = 0;
       megaChekCount = 1;
       Serial.println("mega Error!!!");
       stm32_serial.println("megaCheck");
-      if (mega_error >= 5) {
+      if (mega_error >= 2) {
         digitalWrite(megaReset, HIGH);
         delay(100);
         digitalWrite(megaReset, LOW);
@@ -289,6 +291,88 @@ void megaUart() {
       MegaresponseTimer = 0;
       MegaResponseCount = 0;
       lcdout();
+    }
+
+    if (stm32_string == "gsm ok") {
+      gsmcheck = 0;
+      gsmTimer = 0;
+      LcdText = "GSM Connect";
+      tft.setTextFont(3);
+      tft.setTextSize(2);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.fillRoundRect(290, 200, 180, 20, 1, TFT_BLACK);
+      tft.setCursor(290, 200);
+      tft.print(LcdText);
+    }
+
+    if (stm32_string == "gsm reset ok") {
+      gsmcheck = 0;
+      gsmTimer = 0;
+      LcdText = "GSM Reset";
+      tft.setTextFont(3);
+      tft.setTextSize(2);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.fillRoundRect(290, 200, 180, 20, 1, TFT_BLACK);
+      tft.setCursor(290, 200);
+      tft.print(LcdText);
+    }
+
+    if (stm32_string == "sms out puts") {
+      LcdText = "GSM SMS";
+      tft.setTextFont(3);
+      tft.setTextSize(2);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.fillRoundRect(290, 230, 180, 20, 1, TFT_BLACK);
+      tft.setCursor(290, 230);
+      tft.print(LcdText);
+
+      String sendSms;
+      if (element1 == 0) sendSms += "OUTPUT_Heat1 OFF";
+      if (element1 == 1) sendSms += "OUTPUT_Heat1 ON";
+      if (element2 == 0) sendSms += "/Heat2 OFF";
+      if (element2 == 1) sendSms += "/Heat2 ON";
+      if (tank1 == 0) sendSms += "/Tank1 OFF";
+      if (tank1 == 1) sendSms += "/Tank1 ON";
+      if (tank2 == 0) sendSms += "/Tank2 OFF";
+      if (tank2 == 1) sendSms += "/Tank2 ON";
+      if (tank3 == 0) sendSms += "/Tank3 OFF";
+      if (tank3 == 1) sendSms += "/Tank3 ON";
+      if (tank4 == 0) sendSms += "/Tank4 OFF";
+      if (tank4 == 1) sendSms += "/Tank4 ON";
+      if (tank5 == 0) sendSms += "/Tank5 OFF";
+      if (tank5 == 1) sendSms += "/Tank5 ON";
+      if (light1 == 0) sendSms += "/Light1 OFF";
+      if (light1 == 1) sendSms += "/Light1 ON";
+      if (light2 == 0) sendSms += "/Light2 OFF";
+      if (light2 == 1) sendSms += "/Light2 ON";
+      if (fan1 == 0) sendSms += "/fan1 OFF";
+      if (fan1 == 1) sendSms += "/fan1 ON";
+      if (fan2 == 0) sendSms += "/fan2 OFF";
+      if (fan2 == 1) sendSms += "/fan2 ON";
+      stm32_serial.println(sendSms);
+    }
+
+    if (stm32_string == "sms soil sensor") {
+      LcdText = "GSM SMS";
+      tft.setTextFont(3);
+      tft.setTextSize(2);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.fillRoundRect(290, 230, 180, 20, 1, TFT_BLACK);
+      tft.setCursor(290, 230);
+      tft.print(LcdText);
+
+      String sendSms = "Sensors_Temp:" + String(MainTemperature, 1) + "/HU:" + String(MainHumidity, 1) + "/T1:" + String(Temp1, 1) + "/T2:" + String(Temp2, 1) + "/T3:" + String(Temp3, 1) + "/T4:" + String(Temp4, 1) + "/HU1:" + String(hu1, 1) + "/HU2:" + String(hu2, 1) + "/HU3:" + String(hu3, 1) + "/HU4:" + String(hu4, 1);
+      stm32_serial.println(sendSms);
+    }
+
+    if (stm32_string == "sms out puts") {
+      LcdText = "GSM SMS";
+      tft.setTextFont(3);
+      tft.setTextSize(2);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.fillRoundRect(290, 230, 180, 20, 1, TFT_BLACK);
+      tft.setCursor(290, 230);
+      tft.print(LcdText);
     }
   }
 }

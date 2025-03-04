@@ -3,6 +3,7 @@
 void Sht20() {
   if (shtTime >= 10) {
     shtTime = 0;
+    sht.read();
     MainTemperature = sht.getTemperature();
     MainHumidity = sht.getHumidity();
     //***Temp***
@@ -32,7 +33,7 @@ void Sht20() {
     tft.setCursor(280, 30);
     tft.print(LcdText);
 
-   
+
 
 
     // Serial.print("  🌡 دما: ");

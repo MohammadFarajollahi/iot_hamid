@@ -118,7 +118,7 @@ void input_touch() {
         lock = 1;
         esp_task_wdt_reset();  // ریست کردن تایمر واچ‌داگ
         digitalWrite(buzzer, HIGH);
-        delay(250);
+        delay(100);
         digitalWrite(buzzer, LOW);
         tft.setTextFont(3);
         tft.setTextSize(2);
@@ -142,11 +142,11 @@ void input_touch() {
         lock = 0;
         esp_task_wdt_reset();  // ریست کردن تایمر واچ‌داگ
         digitalWrite(buzzer, HIGH);
-        delay(200);
+        delay(100);
         digitalWrite(buzzer, LOW);
         delay(100);
         digitalWrite(buzzer, HIGH);
-        delay(200);
+        delay(100);
         digitalWrite(buzzer, LOW);
         tft.setTextFont(3);
         tft.setTextSize(2);

@@ -15,9 +15,14 @@ String inputData;
 #include <ArduinoJson.h>
 JsonDocument doc;
 
+int GsmModem;
+int gsm_reset = 22;
+
 void setup() {
   Serial.begin(115200);
   Serial2.begin(115200);
+  Serial3.begin(9600);
+  pinMode(gsm_reset, OUTPUT);
   pinMode(element1, OUTPUT);
   pinMode(element2, OUTPUT);
   pinMode(tank1, OUTPUT);
@@ -30,8 +35,10 @@ void setup() {
   pinMode(fan1, OUTPUT);
   pinMode(fan2, OUTPUT);
   Serial.println("start...");
+  Serial3.println("GSMcheck");
 }
 
 void loop() {
   uart2();
+  uart3();
 }

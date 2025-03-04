@@ -159,7 +159,7 @@ HardwareSerial stm32_serial(1);
 #include <esp_task_wdt.h>
 #define WDT_TIMEOUT 6  // زمان تایم‌اوت به ثانیه
 
-///eeprom///
+///eeprom///s
 #include <Preferences.h>
 Preferences preferences;
 
@@ -174,6 +174,8 @@ int shtTime = 10;
 float MainHumidity;
 float MainTemperature;
 
+
+
 int lock = 1;
 int lock_count;
 int lock_timer;
@@ -181,6 +183,15 @@ int lock_timer;
 int StartPrgram = 1;
 
 //****ds18b20****
+//ds18b20
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS 41  // تغییر دهید بر اساس پین موردنظر شما
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+const int numSensors = 4;
+DeviceAddress sensorAddresses[numSensors];
+
 float Temp1 = 25.5;
 float Temp2 = 23.5;
 float Temp3 = 21.5;
@@ -193,7 +204,7 @@ float hu4 = 73.4;
 float HuSetting1 = 65.4;
 int khak_count = 10;
 int megaChekCount;
-int megaCheckTimer = 60;
+int megaCheckTimer = 25;
 int megaState;
 int mega_error;
 int megaResponse;
@@ -205,23 +216,7 @@ int megaStateCheck;
 int sdState;
 int sdTimer;
 int gpioTimer = 0;
-//*************************timer**********************
-hw_timer_t *timer = NULL;  // اشاره‌گر به تایمر
-void IRAM_ATTR onTimer() {
-  ++ClockTimer;
-  ++shtTime;
-  ++khak_count;
-  if (megaState == 0) ++megaCheckTimer;
-  ++gpioTimer;
-  if (MegaResponseCount == 1) ++MegaresponseTimer;
-  if (lock_count >= 1) ++lock_timer;
-  if (lock_timer >= 5) {
-    lock_count = 0;
-    lock_timer = 0;
-  }
-  ++CheckCount;
-  esp_task_wdt_reset();  // ریست کردن تایمر واچ‌داگ
-}
+
 
 int element1;
 int element2;
@@ -241,6 +236,32 @@ int buzzer = 21;
 int megaReset = 46;
 
 int DayProg = 1;
+int huPin1 = 15;
+int huPin2 = 16;
+int huPin3 = 17;
+int huPin4 = 18;
+
+int gsmcheck;
+int gsmTimer;
+int gsmerror;
+//*************************timer**********************
+hw_timer_t *timer = NULL;  // اشاره‌گر به تایمر
+void IRAM_ATTR onTimer() {
+  ++ClockTimer;
+  ++shtTime;
+  ++khak_count;
+  ++gsmTimer;
+  if (megaState == 0) ++megaCheckTimer;
+  ++gpioTimer;
+  if (MegaResponseCount == 1) ++MegaresponseTimer;
+  if (lock_count >= 1) ++lock_timer;
+  if (lock_timer >= 10) {
+    lock_count = 0;
+    lock_timer = 0;
+  }
+  ++CheckCount;
+  esp_task_wdt_reset();  // ریست کردن تایمر واچ‌داگ
+}
 
 void setup() {
   // راه‌اندازی واچ‌داگ برای پردازش اصلی
@@ -267,6 +288,8 @@ void setup() {
   timerAlarmEnable(timer);
   //////////////clock/////
   Wire.begin(8, 9);  // برای ESP32-S3: SDA=GPIO21, SCL=GPIO22
+  //sht20
+  sht.begin();
   if (!rtc.begin()) {
     Serial.println("⛔ DS3231M شناسایی نشد!");
   }
@@ -288,6 +311,20 @@ void setup() {
     Serial.println("SD card initialized.");
     sdState = 1;
     sdTimer = 0;
+  }
+
+  //ds18b20
+  sensors.begin();
+  for (int i = 0; i < numSensors; i++) {
+    if (sensors.getAddress(sensorAddresses[i], i)) {
+      Serial.print("سنسور ");
+      Serial.print(i + 1);
+      Serial.print(" یافت شد: ");
+      printAddress(sensorAddresses[i]);
+    } else {
+      Serial.print("خطا در یافتن سنسور ");
+      Serial.println(i + 1);
+    }
   }
 
   //wifi
@@ -314,8 +351,7 @@ void setup() {
   tft.print(LcdText);
 
   //tft.drawPngFile(SD, "/BACKGROUND.png", 0, 0);
-  //sht20
-  sht.begin();
+
 
   //eeprom///
   preferences.begin("storage", false);
@@ -431,7 +467,7 @@ void setup() {
     tft.setTextFont(3);
     tft.setTextSize(2);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.fillRoundRect(290, 170, 90, 20, 1, TFT_BLACK);
+    tft.fillRoundRect(290, 170, 180, 20, 1, TFT_BLACK);
     tft.setCursor(290, 170);
     tft.print(LcdText);
   }
@@ -442,6 +478,15 @@ void setup() {
     connectError = 0;
     Serial.println("Connected to WiFi");
     LcdText = "WIFI Connect";
+    tft.setTextFont(3);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.fillRoundRect(250, 310, 120, 20, 1, TFT_BLACK);
+    tft.setCursor(250, 310);
+    tft.print(LcdText);
+  }
+  if (WiFi.status() != WL_CONNECTED) {
+    LcdText = "WIFI DisConnect";
     tft.setTextFont(3);
     tft.setTextSize(1);
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
@@ -462,4 +507,5 @@ void loop(void) {
   if (StartPrgram == 1) dayProgram();
   megaGpio();
   wifi();
+  if (megaState == 1) gsmcheck_();
 }

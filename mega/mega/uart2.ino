@@ -5,12 +5,34 @@ void uart2() {
     inputData = Serial2.readStringUntil('\n');
     inputData.trim();
     Serial.println(inputData);
+    //***gsm check***
+    if (inputData == "GSMcheck") {
+      Serial3.println("GSMcheck");
+    }
+
+    if (inputData == "reset gsm") {
+      Serial2.println("gsm reset ok");
+      digitalWrite(gsm_reset, HIGH);
+      delay(200);
+      digitalWrite(gsm_reset, LOW);
+    }
+
     if (inputData == "megaCheck") {
       Serial2.println("mega ok");
     }
 
-     if (inputData == "megaResponse") {
+    if (inputData == "megaResponse") {
       Serial2.println("Response ok");
+    }
+
+    sub1 = inputData.substring(0, 7);  ///Sensors
+    if (sub1 == "Sensors") {
+      Serial3.println(inputData);
+    }
+
+     sub1 = inputData.substring(0, 6);  ///OUTPUT_Heat1
+    if (sub1 == "OUTPUT") {
+      Serial3.println(inputData);
     }
 
     sub1 = inputData.substring(0, 1);  ///.c_str()
@@ -44,81 +66,80 @@ void uart2() {
         Serial.println("tank1 on");
         digitalWrite(tank1, HIGH);
       }
-       if (doc["tank1"] == "off") {
+      if (doc["tank1"] == "off") {
         Serial.println("tank1 off");
         digitalWrite(tank1, LOW);
       }
 
-       //tank2///
+      //tank2///
       if (doc["tank2"] == "on") {
         Serial.println("tank2 on");
         digitalWrite(tank2, HIGH);
       }
-       if (doc["tank2"] == "off") {
+      if (doc["tank2"] == "off") {
         Serial.println("tank2 off");
         digitalWrite(tank2, LOW);
       }
 
-       //tank3///
+      //tank3///
       if (doc["tank3"] == "on") {
         Serial.println("tank3 on");
         digitalWrite(tank3, HIGH);
       }
-       if (doc["tank3"] == "off") {
+      if (doc["tank3"] == "off") {
         Serial.println("tank3 off");
         digitalWrite(tank3, LOW);
       }
 
-        //tank4///
+      //tank4///
       if (doc["tank4"] == "on") {
         Serial.println("tank4 on");
         digitalWrite(tank4, HIGH);
       }
-       if (doc["tank4"] == "off") {
+      if (doc["tank4"] == "off") {
         Serial.println("tank4 off");
         digitalWrite(tank4, LOW);
       }
 
-       //light1///
+      //light1///
       if (doc["light1"] == "on") {
         Serial.println("light1 on");
         digitalWrite(light1, HIGH);
       }
-       if (doc["light1"] == "off") {
+      if (doc["light1"] == "off") {
         Serial.println("light1 off");
         digitalWrite(light1, LOW);
       }
 
-        //light2///
+      //light2///
       if (doc["light2"] == "on") {
         Serial.println("light2 on");
         digitalWrite(light2, HIGH);
       }
-       if (doc["light2"] == "off") {
+      if (doc["light2"] == "off") {
         Serial.println("light2 off");
         digitalWrite(light2, LOW);
       }
 
-       //fan1///
+      //fan1///
       if (doc["fan1"] == "on") {
         Serial.println("fan1 on");
         digitalWrite(fan1, HIGH);
       }
-       if (doc["fan1"] == "off") {
+      if (doc["fan1"] == "off") {
         Serial.println("fan1 off");
         digitalWrite(fan1, LOW);
       }
 
-       //fan2///
+      //fan2///
       if (doc["fan2"] == "on") {
         Serial.println("fan2 on");
         digitalWrite(fan2, HIGH);
       }
-       if (doc["fan2"] == "off") {
+      if (doc["fan2"] == "off") {
         Serial.println("fan2 off");
         digitalWrite(fan2, LOW);
       }
-
     }
 
 
