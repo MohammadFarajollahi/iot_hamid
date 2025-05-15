@@ -21,7 +21,7 @@ void megaCheck() {
       digitalWrite(megaReset, HIGH);
       delay(100);
       digitalWrite(megaReset, LOW);
-      delay(2000);
+      delay(4000);
       tft.setTextFont(3);
       tft.setTextSize(1);
       tft.setTextColor(TFT_YELLOW, TFT_BLACK);
@@ -39,7 +39,7 @@ void megaCheck() {
         digitalWrite(megaReset, HIGH);
         delay(100);
         digitalWrite(megaReset, LOW);
-        delay(1000);
+        delay(4000);
         ESP.restart();  // ریست نرم‌افزاری ESP32
       }
     }

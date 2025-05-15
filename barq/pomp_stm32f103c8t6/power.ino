@@ -37,17 +37,19 @@ void power_() {
 
         if (number1 != "+981111111111") {
           input_number = number1;
-          sms_text = "062806310642002006480635064400200634062F";
+          sms_text = "06280631064200200648063506440020064506CC0020062806270634062F";
           send_sms();
-          sms_done2_();
+          sms_done_();
         }
 
         if (number2 != "+981111111111") {
           input_number = number2;
-          sms_text = "062806310642002006480635064400200634062F";
+          sms_text = "06280631064200200648063506440020064506CC0020062806270634062F";
           send_sms();
-          sms_done2_();
+          sms_done_();
         }
+
+        //ring_alarm();
       }
     }
 
@@ -80,18 +82,33 @@ void power_() {
             input_number = number1;
             sms_text = "06470634062F06270631000D000A062806310642002006420637063900200634062F";
             send_sms();
-            sms_done2_();
+            sms_done_();
           }
 
           if (number2 != "+981111111111") {
             input_number = number2;
             sms_text = "06470634062F06270631000D000A062806310642002006420637063900200634062F";
             send_sms();
-            sms_done2_();
+            sms_done_();
           }
           ring_alarm();
         }
       }
     }
+  }
+}
+
+
+void powerState() {
+  if (power_count == 1) {
+    sms_text = "06280631064200200648063506440020064506CC0020062806270634062F";
+    send_sms();
+    sms_done_();
+  }
+
+  if (power_count == 0) {
+    sms_text = "06280631064200200642063706390020064506CC0020062806270634062F";
+    send_sms();
+    sms_done_();
   }
 }
